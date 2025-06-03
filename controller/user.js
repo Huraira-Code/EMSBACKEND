@@ -1,0 +1,165 @@
+const User = require("../models/user.js");
+const jwt = require("jsonwebtoken");
+const createUser = async (req, res) => {
+  try {
+    const {
+      Username,
+      CNIC,
+      Address,
+      UserId,
+      Phone,
+      Password,
+      Service,
+      Room,
+      ServiceStatus,
+      PropertyType, // <-- Added this line
+    } = req.body;
+
+    const newUser = new User({
+      Username,
+      CNIC,
+      Address,
+      UserId,
+      Phone,
+      Password: UserId,
+      Service,
+      Room, // should be an array of rooms, each containing devices
+      ServiceStatus,
+      PropertyType, // <-- And this line
+    });
+
+    await newUser.save();
+    return res
+      .status(201)
+      .json({ message: "User created successfully", user: newUser });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    if (error.code === 11000) {
+      return res
+        .status(409)
+        .json({ message: "Duplicate CNIC, Phone or UserId" });
+    }
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// SIGN IN
+const signin = async (req, res) => {
+  try {
+    const { UserId, Password } = req.body;
+
+    // Find user by UserId
+    const user = await User.findOne({ UserId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Password check
+    // If using bcrypt:
+    // const isMatch = await bcrypt.compare(Password, user.Password);
+    const isMatch = Password === user.Password;
+
+    if (!isMatch) {
+      return res.status(401).json({ message: "Invalid password" });
+    }
+
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user._id, UserId: user.UserId },
+      "your_secret_key", // Replace with env variable in production
+      { expiresIn: "1d" }
+    );
+
+    res.status(200).json({
+      message: "Signin successful",
+      token,
+      user: {
+        Username: user.Username,
+        UserId: user.UserId,
+        CNIC: user.CNIC,
+        Address: user.Address,
+        Phone: user.Phone,
+        Service: user.Service,
+        ServiceStatus: user.ServiceStatus,
+        Room: user.Room,
+      },
+    });
+  } catch (error) {
+    console.error("Signin error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find(); // fetch all users
+    return res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const updateServiceStatus = async (req, res) => {
+  try {
+    const { UserId, ServiceStatus } = req.body;
+
+    if (typeof ServiceStatus !== "boolean") {
+      return res.status(400).json({ message: "ServiceStatus must be boolean" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { UserId },
+      { ServiceStatus },
+      { new: true }
+    );
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: `User with UserId '${UserId}' not found` });
+    }
+
+    return res.status(200).json({
+      message: "ServiceStatus updated successfully",
+      user,
+    });
+  } catch (error) {
+    console.error("Error updating service status:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { UserId, newPassword } = req.body;
+
+    if (!UserId || !newPassword) {
+      return res
+        .status(400)
+        .json({ message: "UserId and newPassword are required" });
+    }
+
+    const user = await User.findOneAndUpdate(
+      { UserId },
+      { Password: newPassword },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Error updating password:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+module.exports = {
+  createUser,
+  signin,
+  getAllUsers,
+  updateServiceStatus,
+  changePassword,
+};
