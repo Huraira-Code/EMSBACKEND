@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const pricingSchema = mongoose.Schema({
   Type: {
     type: String,
-    enum: ["Commercial", "Residencial"], // example values
+    enum: ["Commercial", "Residential"], // example values
     required: true,
   },
   Watt: {

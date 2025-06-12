@@ -4,7 +4,7 @@ const updatePricingByType = async (req, res) => {
   try {
     const { Type, Watt } = req.body;
 
-    if (!["Commercial", "Residencial"].includes(Type)) {
+    if (!["Commercial", "Residential"].includes(Type)) {
       return res.status(400).json({ message: "Invalid Type" });
     }
 
@@ -34,7 +34,7 @@ const findPricingByTypePost = async (req, res) => {
   try {
     const { Type } = req.body;
 
-    if (!Type || !["Commercial", "Residencial"].includes(Type)) {
+    if (!Type || !["Commercial", "Residential"].includes(Type)) {
       return res.status(400).json({ message: "Invalid or missing Type" });
     }
 

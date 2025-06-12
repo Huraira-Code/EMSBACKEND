@@ -132,6 +132,7 @@ const updateServiceStatus = async (req, res) => {
 const changePassword = async (req, res) => {
   try {
     const { UserId, newPassword } = req.body;
+    console.log(req.body);
 
     if (!UserId || !newPassword) {
       return res
@@ -140,11 +141,11 @@ const changePassword = async (req, res) => {
     }
 
     const user = await User.findOneAndUpdate(
-      { UserId },
+      { _id: UserId },
       { Password: newPassword },
       { new: true }
     );
-
+    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -156,10 +157,47 @@ const changePassword = async (req, res) => {
   }
 };
 
+const changeUserStatus = async (req, res) => {
+  try {
+    const userId = req.body.id; // Get user ID from the URL parameters
+    const { ServiceStatus } = req.body; // Get ServiceStatus from the request body
+
+    // Validate input
+    if (ServiceStatus === undefined || typeof ServiceStatus !== "boolean") {
+      return res
+        .status(400)
+        .json({
+          message: "ServiceStatus (boolean) is required in the request body.",
+        });
+    }
+
+    // Find the user by ID and update only the ServiceStatus field
+    const user = await User.findByIdAndUpdate(
+      { _id: userId },
+      { ServiceStatus: ServiceStatus }, // Update only ServiceStatus
+      { new: true } // Return the updated document
+    );
+
+    // If no user is found with the given ID
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return a success response
+    return res
+      .status(200)
+      .json({ message: "User status updated successfully", user });
+  } catch (error) {
+    console.error("Error changing user status:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 module.exports = {
   createUser,
   signin,
   getAllUsers,
   updateServiceStatus,
   changePassword,
+  changeUserStatus,
 };
