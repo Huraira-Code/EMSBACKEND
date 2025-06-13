@@ -14,7 +14,15 @@ app.use(
     origin: "*",
   })
 );
-const { createUser, signin, getAllUsers, updateServiceStatus, changePassword, changeUserStatus } = require("../controller/user");
+const {
+  createUser,
+  signin,
+  getAllUsers,
+  updateServiceStatus,
+  changePassword,
+  changeUserStatus,
+  deleteUser,
+} = require("../controller/user");
 
 function authenticateToken(req, res, next) {
   const authtoken = req.cookies.jwt;
@@ -44,6 +52,7 @@ router.route("/getAllUser").post(getAllUsers);
 router.route("/updateServiceStatus").post(updateServiceStatus);
 router.route("/changePassword").post(changePassword);
 router.route("/changeStatus").post(changeUserStatus);
+router.route("/deleteUser").post(deleteUser);
 
 // router.route("/SendRepeatToken").post(handleRepeatTokenSend);
 // router.route("/verifyToken").post(VerifyToken);

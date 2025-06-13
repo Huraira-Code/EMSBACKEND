@@ -164,11 +164,9 @@ const changeUserStatus = async (req, res) => {
 
     // Validate input
     if (ServiceStatus === undefined || typeof ServiceStatus !== "boolean") {
-      return res
-        .status(400)
-        .json({
-          message: "ServiceStatus (boolean) is required in the request body.",
-        });
+      return res.status(400).json({
+        message: "ServiceStatus (boolean) is required in the request body.",
+      });
     }
 
     // Find the user by ID and update only the ServiceStatus field
@@ -193,6 +191,35 @@ const changeUserStatus = async (req, res) => {
   }
 };
 
+const deleteUser = async (req, res) => {
+  console.log(req.body)
+  try {
+    const { _id } = req.body;
+
+    // Validate input
+    if (!_id) {
+      return res
+        .status(400)
+        .json({ message: "_id is required in the request body." });
+    }
+
+    // Attempt to delete the user
+    const deletedUser = await User.findByIdAndDelete(_id);
+
+    // Check if user was found and deleted
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found." });
+    }
+    console.log(deleteUser)
+    return res
+      .status(200)
+      .json({ message: "User deleted successfully.", deletedUser });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 module.exports = {
   createUser,
   signin,
@@ -200,4 +227,5 @@ module.exports = {
   updateServiceStatus,
   changePassword,
   changeUserStatus,
+  deleteUser,
 };
